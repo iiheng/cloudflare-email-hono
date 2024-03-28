@@ -1,32 +1,29 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
+import { Hono } from 'hono'
+import AuthMiddleware from './middlewares/auth';
+import EmailSchemaMiddleware from './middlewares/email';
+import { IEmail } from './schema/email';
+import Email from './controllers/email';
+type Bindings = {
 }
 
-export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
-};
+const app = new Hono<{ Bindings: Bindings }>()
+
+// 定义邮件发送路由
+app.post('/api/email',
+  AuthMiddleware,
+  EmailSchemaMiddleware,
+  async (c) => {
+    const email = c.email as IEmail;
+    try {
+      await Email.send(email);
+
+    } catch (e) {
+      console.error(`Error sending email: ${e}`);
+      return new Response(`Error sending email: ${e}`, { status: 500 });
+    }
+
+    return new Response('OK', { status: 200 });
+});
+
+
+export default app
