@@ -1,24 +1,17 @@
-name: Deploy to Cloudflare Workers
-run-name: ${{ github.actor }} is running Cloudflare Deploy Action 🚀
+name: Deploy Worker
 on:
   push:
-    branches:
-      - main  # 或你用于部署的分支
+  pull_request:
+  repository_dispatch:
 jobs:
-  Explore-GitHub-Actions:
+  deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: test
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - name: Build & Deploy Worker
+        uses: cloudflare/wrangler-action@v3
         with:
-          node-version: '14'
-      - name: Install dependencies
-        run: npm install
-      - name: Deploy to Cloudflare Workers
-        env:
-          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          npm install -g wrangler
-          npx wrangler secret put TOKEN --api-token $CF_API_TOKEN
-          npm run deploy
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
