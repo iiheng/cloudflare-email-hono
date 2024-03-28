@@ -7,12 +7,12 @@ on:
     branches: [ "testaction" ]
 
 jobs:
-  Explore-GitHub-Actions:
+  build:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [21.5.0]  # 更新为你想要使用的 Node.js 版本
+
     steps:
       - uses: actions/checkout@v3
 
