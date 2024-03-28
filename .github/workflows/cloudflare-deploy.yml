@@ -1,35 +1,17 @@
-name: Cloudflare Deploy
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: Deploy Worker
 on:
   push:
-    branches: [ "testaction" ]
   pull_request:
-    branches: [ "testaction" ]
-
+  repository_dispatch:
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [21.5.0]  # 更新为你想要使用的 Node.js 版本
-
+    timeout-minutes: 60
+    needs: test
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v2
+      - name: Build & Deploy Worker
+        uses: cloudflare/wrangler-action@v3
         with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy to Cloudflare Workers
-        env:
-          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          TOKEN_VALUE: ${{ secrets.TOKEN_VALUE || '123456' }}
-        run: |
-          npm install -g wrangler
-          echo "$TOKEN_VALUE" | npx wrangler secret put TOKEN --api-token $CF_API_TOKEN
-          npm run deploy
-
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
